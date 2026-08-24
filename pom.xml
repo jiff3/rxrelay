@@ -23,7 +23,7 @@
     <postgresql.version>42.7.12</postgresql.version>
     <spotless.version>2.44.4</spotless.version>
     <spotbugs.version>4.10.3.0</spotbugs.version>
-    <mockito.version>5.14.2</mockito.version>
+    <mockito.version>5.17.0</mockito.version>
   </properties>
 
   <dependencyManagement>
