@@ -1,0 +1,44 @@
+{
+  "name": "@rxrelay/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "contract:generate": "openapi-typescript ../../contracts/openapi/rxrelay-api.v1.yaml -o src/generated/rxrelay-api.ts",
+    "contract:check": "node scripts/check-openapi-contract.mjs",
+    "lint": "eslint src e2e vite.config.ts playwright.config.ts --max-warnings=0",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "capture:screenshots": "node scripts/capture-screenshots.mjs"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.66.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^26.2.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "10.9.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.4",
+    "globals": "17.11.0",
+    "jsdom": "^26.0.0",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "8.67.0",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

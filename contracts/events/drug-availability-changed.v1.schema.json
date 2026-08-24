@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.rxrelay.invalid/contracts/events/drug-availability-changed.v1.schema.json",
+  "title": "DrugAvailabilityChanged v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "correlationId", "producer", "source", "sourceRecordId", "ingestionRunId", "drugConceptId", "newStatus", "detectedAt"],
+  "properties": {
+    "schemaVersion": { "const": "1.1" }, "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "const": "DrugAvailabilityChanged" }, "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string", "format": "uuid" }, "producer": { "const": "rxrelay-core" }, "source": { "const": "openfda" },
+    "sourceRecordId": { "type": "string" }, "ingestionRunId": { "type": "string", "format": "uuid" },
+    "drugConceptId": { "type": "string", "format": "uuid" }, "previousStatus": { "enum": ["CURRENT", "RESOLVED", "TO_BE_DISCONTINUED", "UNKNOWN", null] },
+    "newStatus": { "enum": ["CURRENT", "RESOLVED", "TO_BE_DISCONTINUED", "UNKNOWN"] },
+    "detectedAt": { "type": "string", "format": "date-time" }, "sourceUpdatedAt": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

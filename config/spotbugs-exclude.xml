@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- Spring owns these injected collaborators; retaining their references is intentional. -->
+  <Match>
+    <Class name="~dev\.rxrelay\.core\.(api\.(NotificationController|ReliabilityLabController|WatchlistController)|config\.(KafkaHealthIndicator|ResilientCacheErrorHandler)|service\.(DeadLetterRecoverer|EventFailureRecorder|EventJsonSerializer|OutboxPublisher|ShortageEventConsumer))"/>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+  </Match>
+
+  <!-- The value is allow-list validated before being reflected as an HTTP response header. -->
+  <Match>
+    <Class name="dev.rxrelay.core.api.CorrelationIdFilter"/>
+    <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+  </Match>
+
+  <!-- Validation in this configuration value object intentionally rejects invalid startup state. -->
+  <Match>
+    <Class name="dev.rxrelay.core.config.DemoUserProvider"/>
+    <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+  </Match>
+
+  <!-- Hibernate reads and writes these mapped fields reflectively. -->
+  <Match>
+    <Class name="dev.rxrelay.core.domain.DrugProduct"/>
+    <Bug pattern="URF_UNREAD_FIELD"/>
+  </Match>
+  <Match>
+    <Class name="dev.rxrelay.core.domain.ProcessedEvent"/>
+    <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+  </Match>
+</FindBugsFilter>

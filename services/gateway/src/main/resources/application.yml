@@ -1,0 +1,54 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  max-http-request-header-size: ${MAX_REQUEST_HEADER_SIZE:16KB}
+
+spring:
+  application:
+    name: rxrelay-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestSize
+          args:
+            maxSize: ${MAX_REQUEST_SIZE:1MB}
+      routes:
+        - id: core-api
+          uri: ${CORE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@callerKeyResolver}"
+                redis-rate-limiter.replenishRate: ${RATE_LIMIT_REPLENISH:20}
+                redis-rate-limiter.burstCapacity: ${RATE_LIMIT_BURST:40}
+                redis-rate-limiter.requestedTokens: 1
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+            allowedMethods: [GET, POST, PATCH, DELETE, OPTIONS]
+            allowedHeaders: [Accept, Content-Type, X-Request-Id]
+            exposedHeaders: [X-Request-Id]
+            allowCredentials: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}

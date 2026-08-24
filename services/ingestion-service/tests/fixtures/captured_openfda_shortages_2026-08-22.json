@@ -1,0 +1,30 @@
+{
+  "fixtureMetadata": {
+    "kind": "captured-public-api-fixture",
+    "capturedAt": "2026-08-22T00:00:00Z",
+    "source": "https://api.fda.gov/drug/shortages.json?search=package_ndc:0480-3564-01&limit=1",
+    "note": "Public openFDA record captured for deterministic tests; not production seed data."
+  },
+  "response": {
+    "meta": {
+      "last_updated": "2026-08-22",
+      "results": { "skip": 0, "limit": 1, "total": 1 }
+    },
+    "results": [
+      {
+        "presentation": "Lisdexamfetamine Dimesylate, Capsule, 70 mg (NDC 0480-3564-01)",
+        "update_type": "Reverified",
+        "initial_posting_date": "07/14/2023",
+        "package_ndc": "0480-3564-01",
+        "generic_name": "Lisdexamfetamine Dimesylate Capsule",
+        "company_name": "Teva Pharmaceuticals USA, Inc.",
+        "contact_info": "800-545-8800",
+        "availability": "Available",
+        "update_date": "08/17/2026",
+        "therapeutic_category": ["Psychiatry"],
+        "status": "Current",
+        "dosage_form": "Capsule"
+      }
+    ]
+  }
+}

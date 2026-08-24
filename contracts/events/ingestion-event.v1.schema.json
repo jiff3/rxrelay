@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.rxrelay.invalid/contracts/events/ingestion-event.v1.schema.json",
+  "title": "RxRelay ingestion event envelope v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "correlationId", "producer", "source", "ingestionRunId"],
+  "properties": {
+    "schemaVersion": { "const": "1.1" },
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "enum": ["IngestionRunStarted", "ShortageObserved", "IngestionRunCompleted"] },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string", "format": "uuid" },
+    "producer": { "const": "rxrelay-ingestion" },
+    "source": { "const": "openfda" },
+    "ingestionRunId": { "type": "string", "format": "uuid" },
+    "runStatus": { "enum": ["RUNNING", "SUCCEEDED", "PARTIAL", "FAILED"] },
+    "summary": { "$ref": "#/$defs/runSummary" },
+    "payload": { "$ref": "#/$defs/observation" }
+  },
+  "allOf": [
+    { "if": { "properties": { "eventType": { "const": "ShortageObserved" } } }, "then": { "required": ["payload"] } },
+    { "if": { "properties": { "eventType": { "const": "IngestionRunCompleted" } } }, "then": { "required": ["runStatus", "summary"] } }
+  ],
+  "$defs": {
+    "runSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requested", "fetched", "published", "malformed", "normalizationUnresolved", "normalizationAmbiguous", "normalizationErrors", "errors"],
+      "properties": {
+        "requested": { "type": "integer", "minimum": 1 }, "fetched": { "type": "integer", "minimum": 0 },
+        "published": { "type": "integer", "minimum": 0 }, "malformed": { "type": "integer", "minimum": 0 },
+        "normalizationUnresolved": { "type": "integer", "minimum": 0 }, "normalizationAmbiguous": { "type": "integer", "minimum": 0 },
+        "normalizationErrors": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "array", "maxItems": 20, "items": { "type": "string" } }
+      }
+    },
+    "observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceRecordId", "sourcePayloadHash", "stateFingerprint", "normalizedName", "canonicalName", "normalizationStatus", "normalizedStatus", "sourceValues"],
+      "properties": {
+        "sourceRecordId": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "sourcePayloadHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "stateFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "normalizedName": { "type": "string", "minLength": 1 }, "canonicalName": { "type": "string", "minLength": 1 },
+        "rxCui": { "type": ["string", "null"] },
+        "normalizationStatus": { "enum": ["SOURCE_PROVIDED", "RESOLVED", "UNRESOLVED", "AMBIGUOUS", "ERROR", "SKIPPED"] },
+        "normalizationQuery": { "type": ["string", "null"] },
+        "normalizedStatus": { "enum": ["CURRENT", "RESOLVED", "TO_BE_DISCONTINUED", "UNKNOWN"] },
+        "sourceValues": {
+          "type": "object", "additionalProperties": false,
+          "required": ["packageNdc", "genericName", "companyName", "presentation", "updateType", "therapeuticCategories", "status", "updateDate", "initialPostingDate"],
+          "properties": {
+            "packageNdc": { "type": "string" }, "genericName": { "type": "string" },
+            "companyName": { "type": "string" }, "presentation": { "type": "string" }, "updateType": { "type": "string" },
+            "availability": { "type": ["string", "null"] }, "relatedInfo": { "type": ["string", "null"] },
+            "relatedInfoLink": { "type": ["string", "null"] }, "resolvedNote": { "type": ["string", "null"] },
+            "shortageReason": { "type": ["string", "null"] }, "therapeuticCategories": { "type": "array", "items": { "type": "string" } },
+            "dosageForm": { "type": ["string", "null"] },
+            "status": { "type": "string" }, "updateDate": { "type": "string", "format": "date-time" },
+            "changeDate": { "type": ["string", "null"], "format": "date-time" },
+            "discontinuedDate": { "type": ["string", "null"], "format": "date-time" },
+            "initialPostingDate": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}

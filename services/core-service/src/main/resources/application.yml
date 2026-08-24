@@ -1,0 +1,100 @@
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+  max-http-request-header-size: ${MAX_REQUEST_HEADER_SIZE:16KB}
+  tomcat:
+    max-http-form-post-size: ${MAX_REQUEST_SIZE:1MB}
+
+spring:
+  application:
+    name: rxrelay-core
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/rxrelay}
+    username: ${DATABASE_USER:rxrelay}
+    password: ${DATABASE_PASSWORD:rxrelay_dev}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:8}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        order_inserts: true
+        order_updates: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+      repositories:
+        enabled: false
+  cache:
+    type: redis
+  servlet:
+    multipart:
+      max-file-size: ${MAX_REQUEST_SIZE:1MB}
+      max-request-size: ${MAX_REQUEST_SIZE:1MB}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    admin:
+      fail-fast: false
+      operation-timeout: ${KAFKA_ADMIN_OPERATION_TIMEOUT_SECONDS:10s}
+      close-timeout: ${KAFKA_ADMIN_CLOSE_TIMEOUT_SECONDS:5s}
+    consumer:
+      group-id: rxrelay-core-observation-v1
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        max.block.ms: ${KAFKA_PRODUCER_MAX_BLOCK_MS:10000}
+        request.timeout.ms: ${KAFKA_PRODUCER_REQUEST_TIMEOUT_MS:5000}
+        delivery.timeout.ms: ${KAFKA_PRODUCER_DELIVERY_TIMEOUT_MS:10000}
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+rxrelay:
+  demo-user:
+    id: ${DEMO_USER_ID:local-demo-user}
+  kafka:
+    shortage-topic: ${SHORTAGE_TOPIC:rxrelay.shortage.observed.v1}
+    availability-topic: ${AVAILABILITY_TOPIC:rxrelay.availability.changed.v1}
+    notification-topic: ${NOTIFICATION_TOPIC:rxrelay.notification.created.v1}
+    dead-letter-topic: ${DEAD_LETTER_TOPIC:rxrelay.availability.dlq.v1}
+    retry:
+      initial-interval-ms: ${CONSUMER_RETRY_INITIAL_INTERVAL_MS:500}
+      max-interval-ms: ${CONSUMER_RETRY_MAX_INTERVAL_MS:5000}
+      max-retries: ${CONSUMER_MAX_RETRIES:2}
+  outbox:
+    poll-delay-ms: ${OUTBOX_POLL_DELAY_MS:1000}
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:8}
+    send-timeout-seconds: ${OUTBOX_SEND_TIMEOUT_SECONDS:10}
+
+logging:
+  structured:
+    format:
+      console: ${CONSOLE_LOG_FORMAT:logstash}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+      group:
+        readiness:
+          include: readinessState,db,kafka
+        liveness:
+          include: livenessState
+  metrics:
+    tags:
+      application: ${spring.application.name}

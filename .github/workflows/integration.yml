@@ -1,0 +1,35 @@
+name: Integration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Start the bounded complete stack
+        run: docker compose up --detach --build --wait --wait-timeout 300
+      - name: Exercise the browser-to-database API path
+        run: python scripts/smoke/compose-smoke.py --timeout 60
+      - name: Capture service state and logs
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --no-color --tail 200
+      - name: Stop and remove ephemeral CI data
+        if: always()
+        run: docker compose down --volumes --remove-orphans

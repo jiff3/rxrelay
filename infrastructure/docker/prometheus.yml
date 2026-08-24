@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: gateway
+    metrics_path: /actuator/prometheus
+    static_configs: [{ targets: ["gateway:8080"] }]
+  - job_name: core-service
+    metrics_path: /actuator/prometheus
+    static_configs: [{ targets: ["core-service:8081"] }]
+  - job_name: ingestion-service
+    metrics_path: /metrics
+    static_configs: [{ targets: ["ingestion-service:8090"] }]
