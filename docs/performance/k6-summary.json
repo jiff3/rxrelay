@@ -1,0 +1,182 @@
+{
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "discovery returned one persisted medication": {
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "discovery returned one persisted medication",
+                            "path": "::setup::discovery returned one persisted medication",
+                            "id": "20e3537db86f467c74d3e21340bcc61b"
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "medication-search returned HTTP 200": {
+                "path": "::medication-search returned HTTP 200",
+                "id": "de3dd29fe83e4f20e4c40e72378d235d",
+                "passes": 198,
+                "fails": 0,
+                "name": "medication-search returned HTTP 200"
+            },
+            "drug-detail returned HTTP 200": {
+                "id": "f29aa7a5ed51fdeb60c3a4960f81e866",
+                "passes": 198,
+                "fails": 0,
+                "name": "drug-detail returned HTTP 200",
+                "path": "::drug-detail returned HTTP 200"
+            },
+            "timeline returned HTTP 200": {
+                "passes": 198,
+                "fails": 0,
+                "name": "timeline returned HTTP 200",
+                "path": "::timeline returned HTTP 200",
+                "id": "27f9659bc9d8bfd6f36932d919a88de2"
+            },
+            "watchlists returned HTTP 200": {
+                "name": "watchlists returned HTTP 200",
+                "path": "::watchlists returned HTTP 200",
+                "id": "c67fe22df9f00e86495c39b08faceb72",
+                "passes": 198,
+                "fails": 0
+            }
+        },
+        "name": "",
+        "path": ""
+    },
+    "metrics": {
+        "data_sent": {
+            "count": 108218,
+            "rate": 7066.186989384374
+        },
+        "http_reqs": {
+            "count": 793,
+            "rate": 51.77961413611237
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 4.377478,
+            "med": 49.017204,
+            "avg": 63.69993324590169,
+            "p(90)": 110.3674294,
+            "p(95)": 188.24660939999998,
+            "p(99)": 269.7152941600001,
+            "max": 410.66036
+        },
+        "http_req_sending": {
+            "med": 0.027587,
+            "avg": 0.044312484237074366,
+            "p(90)": 0.08153560000000007,
+            "p(95)": 0.11316279999999998,
+            "p(99)": 0.24511216000000105,
+            "max": 1.084203,
+            "min": 0.005744
+        },
+        "data_received": {
+            "count": 1730437,
+            "rate": 112990.36588505913
+        },
+        "iterations": {
+            "count": 198,
+            "rate": 12.928579569924652
+        },
+        "http_req_connecting": {
+            "p(99)": 2.066518160000002,
+            "max": 6.041969,
+            "min": 0,
+            "med": 0,
+            "avg": 0.045514950819672134,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_tls_handshaking": {
+            "p(99)": 0,
+            "max": 0,
+            "min": 0,
+            "med": 0,
+            "avg": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus_max": {
+            "value": 4,
+            "min": 4,
+            "max": 4
+        },
+        "http_req_duration": {
+            "avg": 63.69993324590169,
+            "p(90)": 110.3674294,
+            "p(95)": 188.24660939999998,
+            "p(99)": 269.7152941600001,
+            "max": 410.66036,
+            "min": 4.377478,
+            "med": 49.017204
+        },
+        "http_req_receiving": {
+            "p(99)": 83.84508400000001,
+            "max": 94.873752,
+            "min": 0.030145,
+            "med": 0.210905,
+            "avg": 3.167426317780578,
+            "p(90)": 1.717618800000001,
+            "p(95)": 3.9036411999999956
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 793,
+            "thresholds": {
+                "rate==0": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "p(95)": 180.6206,
+            "p(99)": 269.3533658400001,
+            "max": 408.248615,
+            "min": 4.129188,
+            "med": 47.002889,
+            "avg": 60.488194443883984,
+            "p(90)": 105.89005
+        },
+        "vus": {
+            "value": 4,
+            "min": 4,
+            "max": 4
+        },
+        "http_req_blocked": {
+            "p(99)": 2.18668844,
+            "max": 8.316528,
+            "min": 0.001791,
+            "med": 0.007281,
+            "avg": 0.06248717023959643,
+            "p(90)": 0.0201292,
+            "p(95)": 0.03167339999999998
+        },
+        "iteration_duration": {
+            "avg": 307.20716492424225,
+            "p(90)": 409.579812,
+            "p(95)": 509.83620439999993,
+            "p(99)": 824.4652984500005,
+            "max": 1279.822994,
+            "min": 107.142794,
+            "med": 293.2201235
+        },
+        "checks": {
+            "passes": 793,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        }
+    },
+    "setup_data": {
+        "drugId": "febd14ef-2280-40ea-aa76-5eb4d953445e"
+    }
+}
