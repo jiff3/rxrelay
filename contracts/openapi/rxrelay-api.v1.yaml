@@ -1,0 +1,294 @@
+openapi: 3.1.0
+info:
+  title: RxRelay Core API
+  version: 1.0.0
+  description: Public medication-supply search and demo monitoring API. Not medical advice.
+servers: [{ url: http://localhost:8080 }]
+paths:
+  /api/v1/overview:
+    get:
+      operationId: getOverview
+      responses:
+        '200': { description: Genuine persisted counts, recent changes, recently updated medications, latest ingestion run, and demo-user unread count, content: { application/json: { schema: { $ref: '#/components/schemas/Overview' } } } }
+  /api/v1/drugs:
+    get:
+      operationId: searchDrugs
+      parameters:
+        - { name: query, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ShortageStatus' } }
+        - { name: manufacturer, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: sort, in: query, schema: { type: string, default: 'name,asc', enum: ['name,asc', 'name,desc', 'updatedAt,asc', 'updatedAt,desc'] } }
+      responses:
+        '200': { description: Deterministically sorted bounded page, content: { application/json: { schema: { $ref: '#/components/schemas/DrugPage' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /api/v1/drugs/{id}:
+    get:
+      operationId: getDrug
+      parameters: [{ $ref: '#/components/parameters/UuidId' }]
+      responses:
+        '200': { description: Normalized drug identity, content: { application/json: { schema: { $ref: '#/components/schemas/Drug' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/drugs/{id}/shortages:
+    get:
+      operationId: getDrugShortages
+      parameters: [{ $ref: '#/components/parameters/UuidId' }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses:
+        '200': { description: Source shortage records, content: { application/json: { schema: { $ref: '#/components/schemas/ShortagePage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/drugs/{id}/timeline:
+    get:
+      operationId: getDrugTimeline
+      parameters: [{ $ref: '#/components/parameters/UuidId' }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses:
+        '200': { description: Meaningful persisted state changes, content: { application/json: { schema: { $ref: '#/components/schemas/TimelinePage' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/watchlists:
+    post:
+      operationId: createWatchlist
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string, minLength: 1, maxLength: 100 } } } } } }
+      responses:
+        '201': { description: Created demo-user watchlist, content: { application/json: { schema: { $ref: '#/components/schemas/Watchlist' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      operationId: listWatchlists
+      parameters: [{ $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Demo-user watchlists, content: { application/json: { schema: { $ref: '#/components/schemas/WatchlistPage' } } } } }
+  /api/v1/watchlists/{id}:
+    get:
+      operationId: getWatchlist
+      parameters:
+        - { $ref: '#/components/parameters/UuidId' }
+        - { name: itemPage, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: itemSize, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200': { description: Watchlist with bounded item page, content: { application/json: { schema: { $ref: '#/components/schemas/Watchlist' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      operationId: deleteWatchlist
+      parameters: [{ $ref: '#/components/parameters/UuidId' }]
+      responses: { '204': { description: Watchlist and its items deleted }, '404': { $ref: '#/components/responses/NotFound' } }
+  /api/v1/watchlists/{id}/items:
+    post:
+      operationId: addWatchlistItem
+      parameters: [{ $ref: '#/components/parameters/UuidId' }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [drugId], properties: { drugId: { type: string, format: uuid } } } } } }
+      responses:
+        '201': { description: Item created, content: { application/json: { schema: { $ref: '#/components/schemas/WatchlistItem' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/v1/watchlists/{id}/items/{itemId}:
+    delete:
+      operationId: deleteWatchlistItem
+      parameters:
+        - { $ref: '#/components/parameters/UuidId' }
+        - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses: { '204': { description: Item removed }, '404': { $ref: '#/components/responses/NotFound' } }
+  /api/v1/notifications:
+    get:
+      operationId: listNotifications
+      parameters:
+        - { name: unreadOnly, in: query, schema: { type: boolean, default: false } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses: { '200': { description: Demo-user notifications, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPage' } } } } }
+  /api/v1/notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      parameters: [{ $ref: '#/components/parameters/UuidId' }]
+      responses: { '200': { description: Updated notification, content: { application/json: { schema: { $ref: '#/components/schemas/Notification' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /api/v1/system/ingestion-runs:
+    get:
+      operationId: listIngestionRuns
+      parameters: [{ $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Sanitized ingestion-run summaries, content: { application/json: { schema: { $ref: '#/components/schemas/IngestionRunPage' } } } } }
+  /api/v1/system/events:
+    get:
+      operationId: listProcessedEvents
+      parameters:
+        - { name: state, in: query, schema: { $ref: '#/components/schemas/EventProcessingState' } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Size' }
+      responses:
+        '200': { description: Bounded event-processing metadata, content: { application/json: { schema: { $ref: '#/components/schemas/ProcessedEventPage' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /api/v1/system/events/{eventId}:
+    get:
+      operationId: getProcessedEvent
+      parameters: [{ name: eventId, in: path, required: true, schema: { type: string, maxLength: 200 } }]
+      responses:
+        '200': { description: Consumer idempotency/audit metadata, content: { application/json: { schema: { $ref: '#/components/schemas/ProcessedEvent' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/system/events/{eventId}/flow:
+    get:
+      operationId: getProcessedEventFlow
+      parameters: [{ name: eventId, in: path, required: true, schema: { type: string, maxLength: 200 } }]
+      responses:
+        '200': { description: Steps backed by persisted event, transition, notification, retry, or dead-letter records, content: { application/json: { schema: { $ref: '#/components/schemas/EventFlow' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  parameters:
+    UuidId: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+    Size: { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+  responses:
+    BadRequest: { description: Invalid request, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    NotFound: { description: Resource not found, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Conflict: { description: Uniqueness conflict, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  schemas:
+    ShortageStatus: { type: string, enum: [CURRENT, RESOLVED, TO_BE_DISCONTINUED, UNKNOWN] }
+    EventProcessingState: { type: string, enum: [PROCESSING, RETRYING, PROCESSED, DEAD_LETTERED] }
+    Drug:
+      type: object
+      required: [id, name, genericName, rxCui, dosageForm, sourceName, normalizationStatus, shortageStatuses, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        genericName: { type: [string, 'null'] }
+        rxCui: { type: [string, 'null'] }
+        dosageForm: { type: [string, 'null'] }
+        sourceName: { type: [string, 'null'], description: Name originally supplied by the shortage source. }
+        normalizationStatus: { type: string, enum: [SOURCE_PROVIDED, RESOLVED, UNRESOLVED, AMBIGUOUS, ERROR, SKIPPED] }
+        shortageStatuses: { type: array, items: { $ref: '#/components/schemas/ShortageStatus' }, description: Distinct statuses across the medication's current source records. }
+        updatedAt: { type: string, format: date-time }
+    Shortage:
+      type: object
+      required: [id, sourceRecordId, source, status, sourceStatus, sourceUpdateType, availability, reason, company, presentation, packageNdc, manufacturer, sourceUpdatedAt, initialPostingAt, firstSeenAt, lastSeenAt]
+      properties:
+        id: { type: string, format: uuid }
+        sourceRecordId: { type: string }
+        source: { type: string }
+        status: { $ref: '#/components/schemas/ShortageStatus' }
+        sourceStatus: { type: [string, 'null'] }
+        sourceUpdateType: { type: [string, 'null'] }
+        availability: { type: [string, 'null'] }
+        reason: { type: [string, 'null'] }
+        company: { type: [string, 'null'] }
+        presentation: { type: [string, 'null'] }
+        packageNdc: { type: [string, 'null'] }
+        manufacturer: { type: [string, 'null'] }
+        sourceUpdatedAt: { type: [string, 'null'], format: date-time }
+        initialPostingAt: { type: [string, 'null'], format: date-time }
+        firstSeenAt: { type: [string, 'null'], format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+    TimelineEvent:
+      type: object
+      required: [id, previousStatus, newStatus, detectedAt, source, eventId]
+      properties:
+        id: { type: string, format: uuid }
+        previousStatus: { oneOf: [{ $ref: '#/components/schemas/ShortageStatus' }, { type: 'null' }] }
+        newStatus: { $ref: '#/components/schemas/ShortageStatus' }
+        detectedAt: { type: string, format: date-time }
+        source: { type: string }
+        eventId: { type: string }
+    WatchlistItem:
+      type: object
+      required: [id, drug, createdAt]
+      properties: { id: { type: string, format: uuid }, drug: { $ref: '#/components/schemas/Drug' }, createdAt: { type: string, format: date-time } }
+    Watchlist:
+      type: object
+      required: [id, name, itemCount, createdAt, updatedAt, items]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        itemCount: { type: integer, format: int64 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        items: { oneOf: [{ $ref: '#/components/schemas/WatchlistItemPage' }, { type: 'null' }] }
+    Notification:
+      type: object
+      required: [id, drug, message, read, createdAt]
+      properties: { id: { type: string, format: uuid }, drug: { $ref: '#/components/schemas/Drug' }, message: { type: string }, read: { type: boolean }, createdAt: { type: string, format: date-time } }
+    ProcessedEvent:
+      type: object
+      required: [eventId, eventType, schemaVersion, producer, correlationId, processingState, ingestionRunId, sourceRecordId, receivedAt, processedAt, retryCount, deadLetteredAt, deadLetterTopic, lastErrorCode, sourceTopic]
+      properties:
+        eventId: { type: string }
+        eventType: { type: string }
+        schemaVersion: { type: [string, 'null'] }
+        producer: { type: [string, 'null'] }
+        correlationId: { type: [string, 'null'] }
+        processingState: { $ref: '#/components/schemas/EventProcessingState' }
+        ingestionRunId: { type: [string, 'null'], format: uuid }
+        sourceRecordId: { type: [string, 'null'] }
+        receivedAt: { type: string, format: date-time }
+        processedAt: { type: [string, 'null'], format: date-time }
+        retryCount: { type: integer, minimum: 0 }
+        deadLetteredAt: { type: [string, 'null'], format: date-time }
+        deadLetterTopic: { type: [string, 'null'] }
+        lastErrorCode: { type: [string, 'null'], description: Exception class only; messages and stack traces are not exposed. }
+        sourceTopic: { type: [string, 'null'] }
+    IngestionRun:
+      type: object
+      required: [id, source, status, requested, fetched, published, malformed, normalizationUnresolved, normalizationAmbiguous, normalizationErrors, startedAt, completedAt]
+      properties:
+        id: { type: string, format: uuid }
+        source: { type: string }
+        status: { type: string, enum: [RUNNING, SUCCEEDED, PARTIAL, FAILED] }
+        requested: { type: [integer, 'null'] }
+        fetched: { type: [integer, 'null'] }
+        published: { type: [integer, 'null'] }
+        malformed: { type: [integer, 'null'] }
+        normalizationUnresolved: { type: [integer, 'null'] }
+        normalizationAmbiguous: { type: [integer, 'null'] }
+        normalizationErrors: { type: [integer, 'null'] }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: [string, 'null'], format: date-time }
+    RecentChange:
+      type: object
+      required: [id, drug, previousStatus, newStatus, occurredAt, source, eventId]
+      properties:
+        id: { type: string, format: uuid }
+        drug: { $ref: '#/components/schemas/Drug' }
+        previousStatus: { oneOf: [{ $ref: '#/components/schemas/ShortageStatus' }, { type: 'null' }] }
+        newStatus: { $ref: '#/components/schemas/ShortageStatus' }
+        occurredAt: { type: string, format: date-time }
+        source: { type: string }
+        eventId: { type: string }
+    Overview:
+      type: object
+      required: [trackedMedications, trackedShortageRecords, unreadNotifications, recentChanges, recentlyUpdatedMedications, latestIngestionRun]
+      properties:
+        trackedMedications: { type: integer, format: int64 }
+        trackedShortageRecords: { type: integer, format: int64 }
+        unreadNotifications: { type: integer, format: int64 }
+        recentChanges: { type: array, items: { $ref: '#/components/schemas/RecentChange' } }
+        recentlyUpdatedMedications: { type: array, items: { $ref: '#/components/schemas/Drug' } }
+        latestIngestionRun: { oneOf: [{ $ref: '#/components/schemas/IngestionRun' }, { type: 'null' }] }
+    EventStep:
+      type: object
+      required: [code, label, state, occurredAt, detail]
+      properties:
+        code: { type: string }
+        label: { type: string }
+        state: { type: string, enum: [COMPLETE, FAILED] }
+        occurredAt: { type: [string, 'null'], format: date-time }
+        detail: { type: [string, 'null'] }
+    EventFlow:
+      type: object
+      required: [event, steps]
+      properties:
+        event: { $ref: '#/components/schemas/ProcessedEvent' }
+        steps: { type: array, items: { $ref: '#/components/schemas/EventStep' } }
+    Error:
+      type: object
+      required: [code, message, timestamp, violations]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: [string, 'null'] }
+        timestamp: { type: string, format: date-time }
+        violations: { type: array, items: { type: object, properties: { field: { type: string }, message: { type: string } } } }
+    DrugPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Drug' } } } }] }
+    ShortagePage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Shortage' } } } }] }
+    TimelinePage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/TimelineEvent' } } } }] }
+    WatchlistPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Watchlist' } } } }] }
+    WatchlistItemPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/WatchlistItem' } } } }] }
+    NotificationPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/Notification' } } } }] }
+    ProcessedEventPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/ProcessedEvent' } } } }] }
+    IngestionRunPage: { allOf: [{ $ref: '#/components/schemas/Page' }, { type: object, required: [items], properties: { items: { type: array, items: { $ref: '#/components/schemas/IngestionRun' } } } }] }
+    Page:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties: { page: { type: integer }, size: { type: integer }, totalElements: { type: integer, format: int64 }, totalPages: { type: integer } }
