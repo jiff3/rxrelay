@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.rxrelay.invalid/contracts/events/ingestion-dead-lettered.v1.schema.json",
+  "title": "IngestionEventDeadLettered v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "correlationId", "producer", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "const": "IngestionEventDeadLettered" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string", "format": "uuid" },
+    "producer": { "const": "rxrelay-core" },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["originalTopic", "originalPartition", "originalOffset", "failureCode", "deliveryAttempts", "retryable", "originalValue"],
+      "properties": {
+        "originalTopic": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "originalPartition": { "type": "integer", "minimum": 0 },
+        "originalOffset": { "type": "integer", "minimum": 0 },
+        "originalEventId": { "type": ["string", "null"] },
+        "failureCode": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "deliveryAttempts": { "type": "integer", "minimum": 1 },
+        "retryable": { "type": "boolean" },
+        "originalValue": { "type": "string", "minLength": 1, "maxLength": 32768 }
+      }
+    }
+  }
+}

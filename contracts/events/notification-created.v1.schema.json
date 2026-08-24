@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.rxrelay.invalid/contracts/events/notification-created.v1.schema.json",
+  "title": "NotificationCreated v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "correlationId", "producer", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "eventId": { "type": "string", "format": "uuid" },
+    "eventType": { "const": "NotificationCreated" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": "string", "format": "uuid" },
+    "producer": { "const": "rxrelay-core" },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notificationId", "ownerId", "drugConceptId", "availabilityEventId", "createdAt"],
+      "properties": {
+        "notificationId": { "type": "string", "format": "uuid" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "drugConceptId": { "type": "string", "format": "uuid" },
+        "availabilityEventId": { "type": "string", "format": "uuid" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
