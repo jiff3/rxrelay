@@ -1,0 +1,237 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-service
+  namespace: rxrelay
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector: { matchLabels: { app.kubernetes.io/name: core-service } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: core-service, app.kubernetes.io/part-of: rxrelay } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: core-service
+          image: rxrelay/core-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8081 }]
+          envFrom: [{ configMapRef: { name: rxrelay-config } }]
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom: { secretKeyRef: { name: rxrelay-secrets, key: database-password } }
+          startupProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 640Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { sizeLimit: 64Mi } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: core-service, namespace: rxrelay }
+spec:
+  selector: { app.kubernetes.io/name: core-service }
+  ports: [{ name: http, port: 8081, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: rxrelay
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector: { matchLabels: { app.kubernetes.io/name: gateway } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: gateway, app.kubernetes.io/part-of: rxrelay } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 20
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: gateway
+          image: rxrelay/gateway:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          envFrom: [{ configMapRef: { name: rxrelay-config } }]
+          startupProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 5
+            failureThreshold: 18
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 384Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { sizeLimit: 32Mi } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: gateway, namespace: rxrelay }
+spec:
+  selector: { app.kubernetes.io/name: gateway }
+  ports: [{ name: http, port: 8080, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion-service
+  namespace: rxrelay
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector: { matchLabels: { app.kubernetes.io/name: ingestion-service } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: ingestion-service, app.kubernetes.io/part-of: rxrelay } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 20
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: ingestion-service
+          image: rxrelay/ingestion-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8090 }]
+          envFrom: [{ configMapRef: { name: rxrelay-config } }]
+          env:
+            - name: OPENFDA_API_KEY
+              valueFrom: { secretKeyRef: { name: rxrelay-secrets, key: openfda-api-key, optional: true } }
+          startupProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 3
+            failureThreshold: 20
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { sizeLimit: 32Mi } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: ingestion-service, namespace: rxrelay }
+spec:
+  selector: { app.kubernetes.io/name: ingestion-service }
+  ports: [{ name: http, port: 8090, targetPort: http }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: rxrelay
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  minReadySeconds: 3
+  progressDeadlineSeconds: 180
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector: { matchLabels: { app.kubernetes.io/name: web } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: web, app.kubernetes.io/part-of: rxrelay } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 15
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: web
+          image: rxrelay/web:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 2
+            failureThreshold: 15
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { cpu: 250m, memory: 96Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { sizeLimit: 16Mi } }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: web, namespace: rxrelay }
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: web }
+  ports: [{ name: http, port: 80, targetPort: http }]

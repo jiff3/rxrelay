@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible defect in RxRelay
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include credentials, patient information, or unredacted private logs."
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the observed and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Include the smallest deterministic sequence and relevant configuration names (not secret values).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RxRelay version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Docker version, memory allocation, and browser/runtime versions where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Add concise logs, correlation/event IDs, or screenshots after removing sensitive values.

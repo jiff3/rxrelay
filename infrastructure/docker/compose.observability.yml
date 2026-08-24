@@ -1,0 +1,11 @@
+services:
+  prometheus:
+    profiles: [observability]
+    image: prom/prometheus:v3.2.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=256MB"]
+    volumes:
+      - ./infrastructure/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: "0.5" }

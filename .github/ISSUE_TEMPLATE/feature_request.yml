@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a focused capability or engineering improvement
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete user or operator problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Include data-source, contract, resource, and compatibility implications.
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      options:
+        - label: This can operate without fabricated production data or claims.
+          required: true
+        - label: This can remain practical on an 8 GB CPU-only workstation.
+          required: true
