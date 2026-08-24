@@ -22,7 +22,7 @@ dev = [
   "jsonschema>=4.23,<5",
   "mypy>=1.14,<2",
   "pytest>=8.3,<9",
-  "pytest-asyncio>=0.25,<1",
+  "pytest-asyncio>=0.25,<2",
   "respx>=0.22,<1",
   "ruff>=0.9,<1",
 ]
