@@ -1,0 +1,32 @@
+.env
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store
+Thumbs.db
+
+# Java
+**/target/
+.mvn/timing.properties
+
+# Python
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/*.py[cod]
+
+# Node
+**/node_modules/
+**/dist/
+**/coverage/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo
+
+# Local runtime state
+.data/
+.tools/
+backups/
+*.pid
