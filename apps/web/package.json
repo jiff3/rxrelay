@@ -24,7 +24,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "^1.62.1",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^26.2.0",
     "@types/react": "^18.3.18",
