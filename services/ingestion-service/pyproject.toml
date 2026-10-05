@@ -20,7 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "jsonschema>=4.23,<5",
-  "mypy>=1.14,<2",
+  "mypy>=1.14,<3",
   "pytest>=8.3,<9",
   "pytest-asyncio>=0.25,<1",
   "respx>=0.22,<1",
